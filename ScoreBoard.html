@@ -4,12 +4,46 @@
     <title>成绩榜单</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 30px; background: #f8f9fa; }
-        .title { text-align: center; margin-bottom: 30px; }
-        .title h1 { font-size: 2.5em; color: #2c3e50; margin: 0; background: linear-gradient(135deg, #3498db, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .ranking-table { background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 30px; }
-        .ranking-header { background: linear-gradient(135deg, #3498db, #2c3e50); color: white; padding: 20px; font-size: 1.5em; text-align: center; }
-        .ranking-item { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid #eee; position: relative; }
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 30px; 
+            background: #f8f9fa; 
+        }
+        .title { 
+            text-align: center; 
+            margin-bottom: 30px; 
+        }
+        .title h1 { 
+            font-size: 2.5em; 
+            color: #2c3e50; 
+            margin: 0; 
+            background: linear-gradient(135deg, #3498db, #2c3e50); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        .ranking-table { 
+            background: white; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            overflow: hidden; 
+            margin-bottom: 30px; 
+        }
+        .ranking-header { 
+            background: linear-gradient(135deg, #3498db, #2c3e50); 
+            color: white; 
+            padding: 20px; 
+            font-size: 1.5em; 
+            text-align: center; 
+        }
+        .ranking-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 20px; 
+            border-bottom: 1px solid #eee; 
+            position: relative; 
+        }
         .ranking-item:nth-child(1) { font-size: 1.8em; }
         .ranking-item:nth-child(2) { font-size: 1.6em; }
         .ranking-item:nth-child(3) { font-size: 1.4em; }
@@ -23,18 +57,51 @@
         .medal-purple { color: #9b59b6; }
         .profile { flex: 1; margin-left: 30px; }
         .score { width: 120px; text-align: right; font-weight: bold; color: #3498db; }
-        .input-section { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .input-section { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+        }
         .input-group { display: flex; gap: 15px; margin-bottom: 15px; }
-        input { flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; }
-        .button-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
-        button { padding: 12px 30px; background: linear-gradient(135deg, #3498db, #2c3e50); color: white; border: none; border-radius: 8px; cursor: pointer; }
+        input { 
+            flex: 1; 
+            padding: 12px; 
+            border: 2px solid #eee; 
+            border-radius: 8px; 
+            font-size: 16px; 
+        }
+        .button-group { 
+            display: flex; 
+            gap: 15px; 
+            justify-content: center; 
+            margin-top: 20px; 
+        }
+        button { 
+            padding: 12px 30px; 
+            background: linear-gradient(135deg, #3498db, #2c3e50); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+        }
         button:hover { opacity: 0.9; }
-        .delete-btn { position: absolute; right: 20px; color: #e74c3c; cursor: pointer; font-size: 0.8em; opacity: 0.7; }
+        .delete-btn { 
+            position: absolute; 
+            right: 20px; 
+            color: #e74c3c; 
+            cursor: pointer; 
+            font-size: 0.8em; 
+            opacity: 0.7; 
+        }
         .delete-btn:hover { opacity: 1; }
-        .error { color: #e74c3c; text-align: center; margin-top: 10px; }
+        .error { 
+            color: #e74c3c; 
+            text-align: center; 
+            margin-top: 10px; 
+        }
         .file-input { margin: 20px 0; text-align: center; }
-        /* 添加一个空的div来为删除按钮留出空间 */
-        .spacer { width: 80px; } /* 新增的样式 */
+        .spacer { width: 80px; } /* 空白占位符 */
     </style>
 </head>
 <body>
@@ -60,6 +127,7 @@
         <div class="button-group">
             <button onclick="addScore()">提交成绩</button>
             <button onclick="exportScores()">导出成绩</button>
+            <button onclick="clearAllRecords()">清空</button>
         </div>
         <div id="error" class="error"></div>
     </div>
@@ -152,6 +220,15 @@
             document.getElementById('error').textContent = message;
         }
 
+        function clearAllRecords() {
+            if (confirm("确定要清空所有记录吗？")) {
+                students = [];
+                localStorage.removeItem('scores');
+                updateData();
+                alert("所有记录已清空！");
+            }
+        }
+
         function updateData() {
             students.sort((a, b) => b.score - a.score);
             students = students.slice(0, 100);
@@ -178,7 +255,7 @@
                         <div style="color: #888; font-size: 0.8em;">学号：${student.id}</div>
                     </div>
                     <div class="score">${student.score.toFixed(2)}%</div>
-                    <div class="spacer"></div> <!-- 添加这个空div作为占位符 -->
+                    <div class="spacer"></div>
                     <div class="delete-btn" onclick="deleteRecord('${student.id}', ${student.score})">× 删除</div>
                 `;
                 container.appendChild(item);
