@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>实验成绩榜单</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* 保持之前的样式不变 */
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 30px; background: #f8f9fa; }
+        .title { text-align: center; margin-bottom: 30px; }
+        .title h1 { font-size: 2.5em; color: #2c3e50; margin: 0; background: linear-gradient(135deg, #3498db, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .ranking-table { background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 30px; }
+        .ranking-header { background: linear-gradient(135deg, #3498db, #2c3e50); color: white; padding: 20px; font-size: 1.5em; text-align: center; }
+        .ranking-item { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid #eee; position: relative; }
+        .ranking-item:nth-child(1) { font-size: 1.8em; }
+        .ranking-item:nth-child(2) { font-size: 1.6em; }
+        .ranking-item:nth-child(3) { font-size: 1.4em; }
+        .ranking-item:nth-child(4) { font-size: 1.2em; }
+        .ranking-item:nth-child(5) { font-size: 1.1em; }
+        .rank { width: 80px; font-weight: bold; text-align: center; }
+        .medal-gold { color: #ffd700; }
+        .medal-silver { color: #c0c0c0; }
+        .medal-bronze { color: #cd7f32; }
+        .medal-blue { color: #2980b9; }
+        .medal-purple { color: #9b59b6; }
+        .profile { flex: 1; margin-left: 30px; }
+        .score { width: 120px; text-align: right; font-weight: bold; color: #3498db; }
+        .input-section { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .input-group { display: flex; gap: 15px; margin-bottom: 15px; }
+        input { flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; }
+        .button-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        button { padding: 12px 30px; background: linear-gradient(135deg, #3498db, #2c3e50); color: white; border: none; border-radius: 8px; cursor: pointer; }
+        button:hover { opacity: 0.9; }
+        .delete-btn { position: absolute; right: 20px; color: #e74c3c; cursor: pointer; font-size: 0.8em; opacity: 0.7; }
+        .delete-btn:hover { opacity: 1; }
+        .error { color: #e74c3c; text-align: center; margin-top: 10px; }
+        .file-input { margin: 20px 0; text-align: center; }
+        .spacer { width: 80px; }
+    </style>
+</head>
+<body>
+    <div class="title">
+        <h1>📊 实验成绩榜单</h1>
+    </div>
+
+    <div class="file-input">
+        <input type="file" id="excelFile" accept=".xlsx">
+        <p>请选择1.xlsx文件</p>
+    </div>
+
+    <div class="ranking-table">
+        <div class="ranking-header">🏆 实验成绩 TOP5</div>
+        <div id="rankingBody"></div>
+    </div>
+
+    <div class="input-section">
+        <div class="input-group">
+            <input type="text" id="studentId" placeholder="请输入学号" autofocus>
+            <input type="number" id="score" step="0.01" placeholder="请输入成绩（如 83.25）">
+        </div>
+        <div class="button-group">
+            <button onclick="addScore()">提交成绩</button>
+            <button onclick="exportScores()">导出成绩</button>
+        </div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        let studentDatabase = {};
+        let students = JSON.parse(localStorage.getItem('scores')) || [];
+
+        // 读取Excel文件
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                studentDatabase = {};
+                jsonData.forEach(row => {
+                    const id = String(row['学号']);
+                    studentDatabase[id] = row['姓名'];
+                });
+
+                alert(`成功加载${Object.keys(studentDatabase).length}条学生数据`);
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        // 输入框回车事件
+        document.getElementById('studentId').addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') document.getElementById('score').focus()
+        });
+        
+        document.getElementById('score').addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') addScore()
+        });
+
+        function addScore() {
+            const studentId = document.getElementById('studentId').value;
+            const score = parseFloat(document.getElementById('score').value);
+            const errorDiv = document.getElementById('error');
+            
+            errorDiv.textContent = '';
+
+            if (!studentId || isNaN(score)) {
+                showError("请填写有效的学号和成绩");
+                return;
+            }
+
+            if (!studentDatabase[studentId]) {
+                showError("学号不存在");
+                return;
+            }
+
+            students.push({
+                id: studentId,
+                name: studentDatabase[studentId],
+                score: score
+            });
+
+            updateData();
+            
+            // 清空输入框
+            document.getElementById('studentId').value = '';
+            document.getElementById('score').value = '';
+            document.getElementById('studentId').focus();
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+        }
+
+        function updateData() {
+            students.sort((a, b) => b.score - a.score);
+            students = students.slice(0, 100);
+            localStorage.setItem('scores', JSON.stringify(students));
+            updateRanking();
+        }
+
+        function updateRanking() {
+            const top5 = students.slice(0, 5);
+            const container = document.getElementById('rankingBody');
+            container.innerHTML = '';
+
+            top5.forEach((student, index) => {
+                const rank = index + 1;
+                const item = document.createElement('div');
+                item.className = 'ranking-item';
+
+                item.innerHTML = `
+                    <div class="rank ${getMedalClass(rank)}">
+                        ${rank}${getMedalSymbol(rank)}
+                    </div>
+                    <div class="profile">
+                        <div>${student.name}</div>
+                        <div style="color: #888; font-size: 0.8em;">学号：${student.id}</div>
+                    </div>
+                    <div class="score">${student.score.toFixed(2)}%</div>
+                    <div class="spacer"></div>
+                    <div class="delete-btn" onclick="deleteRecord('${student.id}', ${student.score})">× 删除</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function deleteRecord(id, score) {
+            students = students.filter(s => !(s.id === id && s.score === score));
+            updateData();
+        }
+
+        function getMedalClass(rank) {
+            return [
+                'medal-gold',
+                'medal-silver',
+                'medal-bronze',
+                'medal-blue',
+                'medal-purple'
+            ][rank - 1] || '';
+        }
+
+        function getMedalSymbol(rank) {
+            return ['🥇', '🥈', '🥉', '🎖️', '⭐'][rank - 1] || '';
+        }
+
+        // 导出成绩功能
+        function exportScores() {
+            if (students.length === 0) {
+                showError("没有成绩记录可以导出");
+                return;
+            }
+
+            // 创建工作簿和工作表
+            const ws = XLSX.utils.json_to_sheet(students.map((student, index) => ({
+                '排名': index + 1,
+                '学号': student.id,
+                '姓名': student.name,
+                '成绩': student.score.toFixed(2) + '%'
+            })));
+
+            // 设置列宽
+            const colWidths = [
+                { wch: 8 },  // 排名
+                { wch: 12 }, // 学号
+                { wch: 15 }, // 姓名
+                { wch: 10 }  // 成绩
+            ];
+            ws['!cols'] = colWidths;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '实验成绩');
+
+            // 生成文件名（带时间戳）
+            const now = new Date();
+            const fileName = `实验成绩_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}.xlsx`;
+
+            // 创建下载链接
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            
+            // 创建临时链接并触发下载
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            
+            // 清理
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+                a.remove();
+            }, 100);
+        }
+
+        // 初始化显示
+        updateRanking();
+    </script>
+</body>
+</html>
