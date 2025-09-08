@@ -54,16 +54,17 @@
             position: absolute;
             top: 50%;
             left: 0; /* 初始时在左侧 */
-            transform: translate(-50%, -50%); /* 精准居中 */
+            transform: translate(-10%, -50%); /* 精准居中 */
             z-index: 10;
             width: 0;
             height: 0;
-            border-left: 8px solid #2c3e50;
-            border-top: 8px solid transparent;
-            border-bottom: 8px solid transparent;
+            border-left: 5px solid #2c3e50;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
             background: none;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
         }
         
         #toggle-btn:hover {
@@ -79,9 +80,9 @@
         
         /* 收缩后，按钮移动到页面边缘 */
         .main-container.collapsed #toggle-btn {
-           left: 15px; 
-           border-left: 8px solid transparent;
-           border-right: 8px solid #2c3e50;
+           transform: translate(-60%, -20%); /* 精准居中 */
+           border-left: 5px solid transparent;
+           border-right: 5px solid #2c3e50;
         }
 
         .student-table-container {
