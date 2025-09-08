@@ -5,28 +5,28 @@
 <title>成绩榜单</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-        body { 
-            font-family: 'Helvetica Neue', Arial, sans-serif; 
-            max-width: 1200px; 
-            margin: 20px auto; 
-            padding: 30px; 
-            background: #f8f9fa; 
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 30px;
+            background: #f8f9fa;
             position: relative;
         }
-        .title { 
-            text-align: center; 
-            margin-bottom: 30px; 
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .title h1 { 
-            font-size: 2.5em; 
-            color: #2c3e50; 
-            margin: 0; 
+        .title h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin: 0;
         }
         .main-container {
             display: flex;
             gap: 30px;
             align-items: stretch; /* Align items to stretch vertically */
-            position: relative; 
+            position: relative;
         }
 
         .left-card {
@@ -37,11 +37,11 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             position: relative;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            
+
             display: flex;
             flex-direction: column;
         }
-        
+
         .right-column {
             flex: 2;
             display: flex;
@@ -66,18 +66,18 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
         }
-        
+
         #toggle-btn:hover {
             opacity: 0.8;
         }
-        
+
         .left-card.collapsed {
             flex: 0;
             min-width: 0;
             opacity: 0;
-            transform: translateX(-110%); 
+            transform: translateX(-110%);
         }
-        
+
         /* 收缩后，按钮移动到页面边缘 */
         .main-container.collapsed #toggle-btn {
            transform: translate(-60%, -20%); /* 精准居中 */
@@ -91,11 +91,11 @@
             overflow-y: auto;
             max-height: 480px;
         }
-        
+
         .table-wrapper {
             border: 1px solid #eee;
             border-radius: 8px;
-            
+
         }
 
         #studentInfoTable {
@@ -120,26 +120,34 @@
             background-color: #f1f3f5;
             font-weight: bold;
         }
+        /* Style for clickable student ID cells */
+        #studentInfoTable td.student-id-cell {
+            cursor: pointer;
+        }
+        #studentInfoTable td.student-id-cell:hover {
+            background-color: #f1f3f5;
+        }
 
-        .ranking-table { 
-            background: white; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-             
+
+        .ranking-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+
         }
-        .ranking-header { 
-            background: linear-gradient(135deg, #3498db, #2c3e50); 
-            color: white; 
-            padding: 20px; 
-            font-size: 1.5em; 
-            text-align: center; 
+        .ranking-header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 20px;
+            font-size: 1.5em;
+            text-align: center;
         }
-        .ranking-item { 
-            display: flex; 
-            align-items: center; 
-            padding: 20px; 
-            border-bottom: 1px solid #eee; 
-            position: relative; 
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            position: relative;
         }
         .ranking-item:last-child {
             border-bottom: none;
@@ -157,48 +165,48 @@
         .medal-purple { color: #9b59b6; }
         .profile { flex: 1; margin-left: 30px; }
         .score { width: 120px; text-align: right; font-weight: bold; color: #3498db; }
-        .input-section { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 15px; 
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+        .input-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
         .input-group { display: flex; gap: 15px; margin-bottom: 15px; }
-        input { 
-            flex: 1; 
-            padding: 12px; 
-            border: 2px solid #eee; 
-            border-radius: 8px; 
-            font-size: 16px; 
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 16px;
         }
-        .button-group { 
-            display: flex; 
-            gap: 15px; 
-            justify-content: center; 
-            margin-top: 20px; 
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
         }
-        button { 
-            padding: 12px 30px; 
-            background: linear-gradient(135deg, #3498db, #2c3e50); 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
         }
         button:hover { opacity: 0.9; }
-        .delete-btn { 
-            position: absolute; 
-            right: 20px; 
-            color: #e74c3c; 
-            cursor: pointer; 
-            font-size: 0.8em; 
-            opacity: 0.7; 
+        .delete-btn {
+            position: absolute;
+            right: 20px;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 0.8em;
+            opacity: 0.7;
         }
         .delete-btn:hover { opacity: 1; }
-        .error { 
-            color: #e74c3c; 
-            text-align: center; 
-            margin-top: 10px; 
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 10px;
         }
         .file-input { margin: 20px; text-align: center; }
         .spacer { width: 80px; }
@@ -213,7 +221,6 @@
 <div class="ranking-header">👨‍🎓 学生信息</div>
 <div class="file-input">
 <input accept=".xlsx, .xls, .csv" id="excelFile" type="file"/>
-<!-- <p>请选择包含学号和姓名的文件</p> -->
 </div>
 <div class="student-table-container">
 <div class="table-wrapper">
@@ -262,7 +269,7 @@
             const day = date.getDate().toString().padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-        
+
         // Update the title on page load
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
@@ -274,7 +281,7 @@
         document.getElementById('excelFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const reader = new FileReader();
-            
+
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
@@ -286,19 +293,19 @@
                     const id = String(row['学号']);
                     studentDatabase[id] = row['姓名'];
                 });
-                
+
                 displayStudentInfo(jsonData);
                 alert(`成功加载${Object.keys(studentDatabase).length}条学生数据`);
             };
 
             reader.readAsArrayBuffer(file);
         });
-        
+
         function displayStudentInfo(data) {
             const tableBody = document.querySelector("#studentInfoTable tbody");
-            tableBody.innerHTML = ''; 
+            tableBody.innerHTML = '';
 
-            if(!data || data.length === 0) {
+            if (!data || data.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#888; padding: 20px;">无数据</td></tr>';
                 return;
             }
@@ -310,17 +317,25 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${studentId}</td>
+                    <td class="student-id-cell">${studentId}</td>
                     <td>${studentName}</td>
                 `;
+
+                const studentIdCell = tr.querySelector('.student-id-cell');
+                studentIdCell.addEventListener('dblclick', () => {
+                    const studentIdInput = document.getElementById('studentId');
+                    studentIdInput.value = studentId;
+                    studentIdInput.focus();
+                });
+
                 tableBody.appendChild(tr);
             });
         }
-        
+
         function toggleLeftCard() {
             const leftCard = document.getElementById('leftCard');
             const mainContainer = document.getElementById('mainContainer');
-            
+
             leftCard.classList.toggle('collapsed');
             mainContainer.classList.toggle('collapsed');
         }
@@ -328,7 +343,7 @@
         document.getElementById('studentId').addEventListener('keydown', (e) => {
             if(e.key === 'Enter') document.getElementById('score').focus()
         });
-        
+
         document.getElementById('score').addEventListener('keydown', (e) => {
             if(e.key === 'Enter') addScore()
         });
@@ -337,7 +352,7 @@
             const studentId = document.getElementById('studentId').value;
             const score = parseFloat(document.getElementById('score').value);
             const errorDiv = document.getElementById('error');
-            
+
             errorDiv.textContent = '';
 
             if (!studentId || isNaN(score)) {
@@ -355,10 +370,10 @@
             }
 
             const existingStudentIndex = students.findIndex(s => s.id === studentId);
-            
+
             if (existingStudentIndex !== -1) {
                 const existingScore = students[existingStudentIndex].score;
-                
+
                 if (score > existingScore) {
                     students[existingStudentIndex].score = score;
                     students[existingStudentIndex].timestamp = new Date(); // Update timestamp
@@ -377,7 +392,7 @@
             }
 
             updateData();
-            
+
             document.getElementById('studentId').value = '';
             document.getElementById('score').value = '';
             document.getElementById('studentId').focus();
@@ -456,7 +471,7 @@
                 showError("没有成绩记录可以导出");
                 return;
             }
-            
+
             function formatDate(date) {
                 const d = new Date(date);
                 const year = d.getFullYear();
@@ -494,12 +509,12 @@
             const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
             const blob = new Blob([wbout], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
-            
+
             const a = document.createElement('a');
             a.href = url;
             a.download = fileName;
             a.click();
-            
+
             setTimeout(() => {
                 URL.revokeObjectURL(url);
                 a.remove();
