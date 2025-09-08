@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>实验成绩榜单</title>
+    <title>成绩榜单</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* 保持之前的样式不变 */
         body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 30px; background: #f8f9fa; }
         .title { text-align: center; margin-bottom: 30px; }
         .title h1 { font-size: 2.5em; color: #2c3e50; margin: 0; background: linear-gradient(135deg, #3498db, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -34,12 +33,13 @@
         .delete-btn:hover { opacity: 1; }
         .error { color: #e74c3c; text-align: center; margin-top: 10px; }
         .file-input { margin: 20px 0; text-align: center; }
-        .spacer { width: 80px; }
+        /* 添加一个空的div来为删除按钮留出空间 */
+        .spacer { width: 80px; } /* 新增的样式 */
     </style>
 </head>
 <body>
     <div class="title">
-        <h1>📊 实验成绩榜单</h1>
+        <h1>📊 成绩榜单</h1>
     </div>
 
     <div class="file-input">
@@ -48,7 +48,7 @@
     </div>
 
     <div class="ranking-table">
-        <div class="ranking-header">🏆 实验成绩 TOP5</div>
+        <div class="ranking-header">🏆 成绩 TOP5</div>
         <div id="rankingBody"></div>
     </div>
 
@@ -117,11 +117,28 @@
                 return;
             }
 
-            students.push({
-                id: studentId,
-                name: studentDatabase[studentId],
-                score: score
-            });
+            // 检查该学生是否已有成绩
+            const existingStudentIndex = students.findIndex(s => s.id === studentId);
+            
+            if (existingStudentIndex !== -1) {
+                const existingScore = students[existingStudentIndex].score;
+                
+                if (score > existingScore) {
+                    // 更新成绩
+                    students[existingStudentIndex].score = score;
+                    alert(`更新成功！该学生的成绩从 ${existingScore.toFixed(2)}% 提高到 ${score.toFixed(2)}%`);
+                } else {
+                    showError("系统中已经有更高的成绩了！");
+                    return;
+                }
+            } else {
+                // 添加新成绩
+                students.push({
+                    id: studentId,
+                    name: studentDatabase[studentId],
+                    score: score
+                });
+            }
 
             updateData();
             
@@ -161,7 +178,7 @@
                         <div style="color: #888; font-size: 0.8em;">学号：${student.id}</div>
                     </div>
                     <div class="score">${student.score.toFixed(2)}%</div>
-                    <div class="spacer"></div>
+                    <div class="spacer"></div> <!-- 添加这个空div作为占位符 -->
                     <div class="delete-btn" onclick="deleteRecord('${student.id}', ${student.score})">× 删除</div>
                 `;
                 container.appendChild(item);
@@ -212,11 +229,11 @@
             ws['!cols'] = colWidths;
 
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '实验成绩');
+            XLSX.utils.book_append_sheet(wb, ws, '成绩');
 
             // 生成文件名（带时间戳）
             const now = new Date();
-            const fileName = `实验成绩_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}.xlsx`;
+            const fileName = `成绩_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}.xlsx`;
 
             // 创建下载链接
             const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
